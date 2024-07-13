@@ -2,3 +2,4 @@ venv
 *.html
 *.webarchive
 *.csv
+.DS_Store
