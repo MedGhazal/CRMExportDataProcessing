@@ -4,6 +4,10 @@ from bs4 import BeautifulSoup
 from csv import DictWriter
 
 
+def get_text(element):
+    return element.p.span.get_text()
+
+
 if __name__ == '__main__':
 
     for file in listdir('.'):
@@ -12,7 +16,6 @@ if __name__ == '__main__':
             continue
 
         if file.split('.')[1] == 'webarchive':
-            print(file)
             run(['textutil', '-convert', 'html', file])
 
             with open(f'{file.split(".")[0]}.html', 'r') as htmlFile:
@@ -46,14 +49,14 @@ if __name__ == '__main__':
                     for i in range(len(lines)):
                         rowDict = {}
                         tds = lines[i].find_all('td')
-                        if tds[0].p.span.get_text() == '#':
+                        if get_text(tds[0]) == '#':
                             tds = lines[i + 1].find_all('td')
                             lessorData = {
                                 key: value
                                 for key, value
                                 in zip(
                                     fieldnames[0:11],
-                                    [td.p.span.get_text() for td in tds],
+                                    [get_text(td) for td in tds],
                                 )
                             }
                             k = 3
@@ -61,15 +64,15 @@ if __name__ == '__main__':
                                 if i + k >= len(lines):
                                     break
                                 tds = lines[i + k].find_all('td')
-                                k += 1
-                                rowDict = {}
-                                for j, title in enumerate(fieldnames[11:]):
-                                    try:
-                                        rowDict[title] = tds[j + 1].p.span.get_text()
-                                    except IndexError:
-                                        break
-                                rowDict.update(lessorData)
-                                if rowDict['Référence'] == 'ID loueur':
+                                if get_text(tds[0]) == '#':
+                                    k += 1
                                     break
+                                k += 1
+                                rowDict = {
+                                    key: get_text(value)
+                                    for key, value
+                                    in zip(fieldnames[11:], tds[1:])
+                                }
+                                rowDict.update(lessorData)
                                 writer.writerow(rowDict)
                             i += k
